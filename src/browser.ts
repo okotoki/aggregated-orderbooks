@@ -32,7 +32,7 @@ function rebuildLegend(coin: Coin) {
   legend.innerHTML = ''
   for (const market of markets) {
     const color = EXCHANGE_COLORS[market.exchange]
-    legend.innerHTML += `<span class="legend-item" data-exchange="${market.exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[market.exchange]} <span class="legend-market">${market.symbol}</span></span>`
+    legend.innerHTML += `<span class="legend-item" data-exchange="${market.exchange}">${EXCHANGE_NAMES[market.exchange]} <span class="legend-market">${market.symbol}</span> <span class="exchange-dot" style="background:${color}"></span></span>`
   }
 }
 
