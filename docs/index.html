@@ -192,6 +192,40 @@
 
     footer a { color: #666; text-decoration: none; }
     footer a:hover { color: #888; }
+
+    .about {
+      margin-top: 24px;
+      padding: 16px;
+      background: #0f0f18;
+      border-radius: 8px;
+      border: 1px solid #1a1a2e;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #888;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .about h2 {
+      font-size: 13px;
+      color: #ccc;
+      margin-bottom: 8px;
+      font-family: inherit;
+    }
+
+    .about p { margin-bottom: 8px; }
+    .about p:last-child { margin-bottom: 0; }
+
+    .about code {
+      background: #1a1a28;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .about a { color: #7B93DB; text-decoration: none; }
+    .about a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -226,6 +260,30 @@
         <div id="asks"></div>
       </div>
       <div id="spread">Spread: --</div>
+    </div>
+
+    <div class="about">
+      <h2>What is this?</h2>
+      <p>
+        A real-time aggregated orderbook that combines L2 order data from 4 crypto exchanges
+        (Binance, Coinbase, Kraken, Bitstamp) into a single unified view. Each row shows the
+        total liquidity at a price level across all exchanges, with colored dots indicating
+        which exchanges contribute. Price levels are grouped into bins for readability.
+      </p>
+      <p>
+        Everything runs in your browser — direct WebSocket connections to each exchange,
+        no backend needed. Zero dependencies, 13KB bundle.
+      </p>
+      <p>
+        Also available as a CLI tool:
+        <code>bun run src/cli.ts BTC</code> — run
+        <code>--exchange=binance</code> for a single exchange or
+        <code>--depth=30</code> for more levels.
+      </p>
+      <p>
+        <a href="https://github.com/okotoki/aggregated-orderbooks">Source on GitHub</a> ·
+        Vibe-coded in an afternoon with Claude.
+      </p>
     </div>
 
     <footer>

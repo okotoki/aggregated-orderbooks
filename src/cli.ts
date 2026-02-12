@@ -85,7 +85,7 @@ function printBook(book: AggregatedBook, coin: string) {
   const RED = '\x1b[31m'
   const DIM = '\x1b[2m'
 
-  console.log(`${DIM}Aggregated Orderbook — ${coin}${RESET}\n`)
+  console.log(`${DIM}Aggregated Orderbook — ${coin}  (grouping: ${book.grouping})${RESET}\n`)
 
   // Header
   console.log(

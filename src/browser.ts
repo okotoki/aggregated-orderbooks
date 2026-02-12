@@ -88,11 +88,12 @@ function renderBook(book: AggregatedBook) {
   bidsEl.innerHTML = book.bids.map((l) => renderBidRow(l, maxBidAmount)).join('')
   asksEl.innerHTML = book.asks.map((l) => renderAskRow(l, maxAskAmount)).join('')
 
-  // Spread
+  // Spread + grouping info
   if (book.bids.length > 0 && book.asks.length > 0) {
     const spread = book.asks[0].price - book.bids[0].price
     const spreadPct = ((spread / book.asks[0].price) * 100).toFixed(3)
-    document.getElementById('spread')!.textContent = `Spread: ${spread.toFixed(2)} (${spreadPct}%)`
+    document.getElementById('spread')!.textContent =
+      `Spread: $${spread.toFixed(2)} (${spreadPct}%)  ·  Grouping: $${book.grouping}`
   }
 }
 
