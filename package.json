@@ -1,0 +1,12 @@
+{
+  "name": "aggregated-orderbooks",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "cli": "bun run src/cli.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.9",
+    "typescript": "^5.9.3"
+  }
+}
