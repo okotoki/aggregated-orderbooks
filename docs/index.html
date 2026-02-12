@@ -5,17 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aggregated Orderbook</title>
   <style>
+    :root {
+      --bg: oklch(0.16 0.02 190);
+      --bg2: #121215;
+      --text: oklch(0.95 0.01 250);
+      --text-dim: oklch(0.55 0.01 250);
+      --accent: oklch(0.88 0.22 178.95);
+      --accent2: #2b2dff;
+      --bid: #50b150;
+      --bid-bright: #1ea400;
+      --ask: #f50d3f;
+      --ask-bright: #ff0088;
+      --border: oklch(0.30 0.03 190);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-      background: #0a0a0f;
-      color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
     }
 
     .container {
-      max-width: 900px;
+      max-width: 920px;
       margin: 0 auto;
       padding: 20px;
     }
@@ -24,64 +38,79 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #1a1a2e;
+      margin-bottom: 12px;
+      padding: 12px 0;
+      border-bottom: 2px solid var(--accent);
     }
 
     h1 {
-      font-size: 16px;
-      font-weight: 600;
-      color: #888;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     h1 .coin-label {
-      color: #fff;
-      font-size: 18px;
+      color: var(--accent);
+      font-size: 20px;
+      letter-spacing: 4px;
     }
 
     .controls {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
     }
 
     select {
-      background: #12121a;
-      color: #e0e0e0;
-      border: 1px solid #2a2a3e;
-      padding: 6px 12px;
-      border-radius: 6px;
+      background: var(--bg2);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 0;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       cursor: pointer;
+      transition: border-color 0.1s;
     }
 
-    select:hover { border-color: #4a4a6e; }
+    select:hover, select:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
 
     #legend {
       display: flex;
-      gap: 12px;
-      font-size: 11px;
-      color: #888;
+      gap: 16px;
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
     }
 
     #status {
-      font-size: 11px;
-      color: #555;
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .book {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      margin-top: 8px;
+      gap: 0;
+      border: 1px solid var(--border);
     }
 
     .book-side {
@@ -89,24 +118,34 @@
       flex-direction: column;
     }
 
+    .book-side:first-child {
+      border-right: 1px solid var(--border);
+    }
+
     #spread {
       text-align: center;
-      padding: 6px;
+      padding: 8px;
       font-size: 11px;
-      color: #666;
-      background: #0f0f18;
-      border-radius: 4px;
-      margin: 4px 0;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--bg2);
       grid-column: 1 / -1;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
     .side-header {
-      font-size: 11px;
-      color: #555;
+      font-size: 9px;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 4px 8px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      padding: 8px 6px;
       display: flex;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
     }
 
     .side-header.bids-header { justify-content: flex-end; }
@@ -114,52 +153,53 @@
     .row {
       display: flex;
       align-items: center;
-      padding: 1px 4px;
+      padding: 0 4px;
       font-size: 12px;
       position: relative;
-      height: 22px;
+      height: 24px;
+      border-bottom: 1px solid oklch(0.20 0.02 190);
     }
 
     .row:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: oklch(0.20 0.03 190);
     }
 
     .price {
       width: 100px;
       text-align: right;
-      font-weight: 500;
+      font-weight: 700;
       flex-shrink: 0;
     }
 
-    .bid .price { color: #26a69a; }
-    .ask .price { color: #ef5350; }
+    .bid .price { color: var(--bid-bright); }
+    .ask .price { color: var(--ask); }
 
     .amount {
       width: 85px;
       text-align: right;
-      color: #888;
+      color: var(--text-dim);
       flex-shrink: 0;
       font-size: 11px;
     }
 
     .exchanges {
       display: flex;
-      gap: 2px;
+      gap: 3px;
       width: 50px;
       flex-shrink: 0;
       justify-content: center;
     }
 
     .exchange-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
+      width: 8px;
+      height: 8px;
+      border-radius: 0;
       display: inline-block;
     }
 
     .bar-bg {
       flex: 1;
-      height: 18px;
+      height: 20px;
       position: relative;
       overflow: hidden;
     }
@@ -168,64 +208,76 @@
       position: absolute;
       top: 0;
       height: 100%;
-      border-radius: 2px;
-      opacity: 0.15;
+      border-radius: 0;
+      opacity: 0.25;
     }
 
     .bid .bar-bg { direction: rtl; }
-    .bid-bar { background: #26a69a; right: 0; }
-    .ask-bar { background: #ef5350; left: 0; }
+    .bid-bar { background: var(--bid); right: 0; }
+    .ask-bar { background: var(--ask); left: 0; }
 
-    /* Bid rows: bar | exchanges | amount | price (right-aligned) */
     .bid { flex-direction: row; }
-    /* Ask rows: price | amount | exchanges | bar (left-aligned) */
     .ask { flex-direction: row; }
 
     footer {
-      margin-top: 24px;
-      padding-top: 12px;
-      border-top: 1px solid #1a1a2e;
+      margin-top: 20px;
+      padding: 12px 0;
+      border-top: 2px solid var(--border);
       text-align: center;
-      font-size: 11px;
-      color: #444;
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
-    footer a { color: #666; text-decoration: none; }
-    footer a:hover { color: #888; }
+    footer a {
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.1s;
+    }
+    footer a:hover { color: var(--accent); }
 
     .about {
-      margin-top: 24px;
+      margin-top: 20px;
       padding: 16px;
-      background: #0f0f18;
-      border-radius: 8px;
-      border: 1px solid #1a1a2e;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
       font-size: 12px;
-      line-height: 1.6;
-      color: #888;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.7;
+      color: var(--text-dim);
     }
 
     .about h2 {
-      font-size: 13px;
-      color: #ccc;
-      margin-bottom: 8px;
-      font-family: inherit;
+      font-size: 10px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-weight: 700;
     }
 
     .about p { margin-bottom: 8px; }
     .about p:last-child { margin-bottom: 0; }
 
     .about code {
-      background: #1a1a28;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: oklch(0.20 0.02 190);
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      font-family: inherit;
       font-size: 11px;
-      color: #aaa;
+      color: var(--accent);
     }
 
-    .about a { color: #7B93DB; text-decoration: none; }
-    .about a:hover { text-decoration: underline; }
+    .about a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+    }
+    .about a:hover {
+      color: var(--text);
+      border-color: var(--text);
+    }
   </style>
 </head>
 <body>
