@@ -58,14 +58,14 @@ export function aggregate(
     grouping = autoGrouping(midPrice)
   }
 
-  // Grab more raw levels than needed so grouping doesn't lose the tail
-  const rawMultiplier = Math.max(depth * 5, 200)
-
+  // Use all available levels — OrderBook already trims to a meaningful range.
+  // With fine-grained books (Binance has $0.01 levels), a small slice would
+  // only cover a few dollars, producing barely any bins at wider groupings.
   return {
     bids: mergeSide(
       readyBooks.map((ob) => ({
         exchange: ob.exchange,
-        levels: ob.topBids(rawMultiplier),
+        levels: ob.bids,
       })),
       depth,
       'desc',
@@ -74,7 +74,7 @@ export function aggregate(
     asks: mergeSide(
       readyBooks.map((ob) => ({
         exchange: ob.exchange,
-        levels: ob.topAsks(rawMultiplier),
+        levels: ob.asks,
       })),
       depth,
       'asc',
