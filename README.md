@@ -35,7 +35,11 @@ bun run serve
 # → http://localhost:3000
 ```
 
-Or just open `public/index.html` — it connects to exchanges directly from the browser, no server needed.
+Or just open `docs/index.html` — it connects to exchanges directly from the browser, no server needed.
+
+### Live Demo
+
+[**okotoki.github.io/aggregated-orderbooks**](https://okotoki.github.io/aggregated-orderbooks/)
 
 ## How it works
 
