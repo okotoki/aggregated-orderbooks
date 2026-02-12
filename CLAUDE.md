@@ -117,7 +117,7 @@ Each exchange connects via WebSocket, subscribes to L2 orderbook, and normalizes
 
 ### Phase 9: Ship It
 - [x] README.md — short, punchy, explains the "why"
-- [ ] GitHub Pages deployment for browser UI
+- [x] GitHub Pages deployment for browser UI
 - [x] Footer credit
 
 ### Commit Strategy
