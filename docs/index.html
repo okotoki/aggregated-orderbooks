@@ -121,12 +121,6 @@
     }
 
     .book {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-    }
-
-    .book-side {
       display: flex;
       flex-direction: column;
     }
@@ -144,7 +138,6 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--accent);
-      grid-column: 1 / -1;
       text-transform: uppercase;
       letter-spacing: 2px;
     }
@@ -158,8 +151,6 @@
       padding: 4px 4px;
       display: flex;
     }
-
-    .side-header.bids-header { justify-content: flex-end; }
 
     .row {
       display: flex;
@@ -181,7 +172,7 @@
 
     .price {
       width: 100px;
-      text-align: right;
+      text-align: left;
       font-weight: 700;
       flex-shrink: 0;
     }
@@ -218,17 +209,13 @@
       overflow: hidden;
     }
 
-    .bid-bar-bg {
-      flex-direction: row-reverse;
-    }
 
     .bar-seg {
       height: 100%;
       opacity: 0.7;
     }
 
-    .bid { flex-direction: row; }
-    .ask { flex-direction: row; }
+    .bid, .ask { flex-direction: row; }
 
     footer {
       margin-top: 20px;
@@ -305,23 +292,14 @@
     <div id="legend"></div>
 
     <div class="book">
-      <div class="book-side">
-        <div class="side-header bids-header">
-          <span style="flex:1"></span>
-          <span style="width:90px;text-align:right">Amount</span>
-          <span style="width:100px;text-align:right">Bid</span>
-        </div>
-        <div id="bids"></div>
+      <div class="side-header">
+        <span style="width:100px">Price</span>
+        <span style="width:90px;text-align:right">Amount</span>
+        <span style="flex:1"></span>
       </div>
-      <div class="book-side">
-        <div class="side-header">
-          <span style="width:100px;text-align:right">Ask</span>
-          <span style="width:90px;text-align:right">Amount</span>
-          <span style="flex:1"></span>
-        </div>
-        <div id="asks"></div>
-      </div>
+      <div id="bids"></div>
       <div id="spread">Spread: --</div>
+      <div id="asks"></div>
     </div>
 
     <div class="about">
