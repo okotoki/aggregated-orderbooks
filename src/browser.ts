@@ -132,8 +132,10 @@ function renderBook(book: AggregatedBook) {
   let askCum = 0
   const askCums = asks.map((l) => { askCum += l.amount; return askCum })
 
-  bidsEl.innerHTML = bids.map((l, i) => renderRow(l, maxAmount, bidCums[i], 'bid')).reverse().join('')
-  asksEl.innerHTML = asks.map((l, i) => renderRow(l, maxAmount, askCums[i], 'ask')).join('')
+  // Asks: highest at top, best ask at bottom (near spread)
+  asksEl.innerHTML = asks.map((l, i) => renderRow(l, maxAmount, askCums[i], 'ask')).reverse().join('')
+  // Bids: best bid at top (near spread), descending
+  bidsEl.innerHTML = bids.map((l, i) => renderRow(l, maxAmount, bidCums[i], 'bid')).join('')
 
   // Spread
   if (book.bids.length > 0 && book.asks.length > 0) {
@@ -246,7 +248,6 @@ function init() {
 
   selector.addEventListener('change', () => {
     currentCoin = selector.value as Coin
-    document.getElementById('coin-label')!.textContent = currentCoin
     lastGroupingBase = 0 // reset so grouping options refresh for new coin
     currentGrouping = undefined
     startFeeds(currentCoin)
@@ -266,7 +267,6 @@ function init() {
     render()
   })
 
-  document.getElementById('coin-label')!.textContent = currentCoin
   startFeeds(currentCoin)
 }
 

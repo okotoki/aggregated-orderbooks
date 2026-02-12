@@ -4,7 +4,7 @@ export const MARKETS: Market[] = [
   // BTC — all USDT for consistent pricing
   { exchange: 'binance', symbol: 'btcusdt', coin: 'BTC' },
   { exchange: 'coinbase', symbol: 'BTC-USD', coin: 'BTC' },
-  { exchange: 'kraken', symbol: 'XBT/USDT', coin: 'BTC' },
+  { exchange: 'kraken', symbol: 'XBT/USD', coin: 'BTC' },
   { exchange: 'bitstamp', symbol: 'btcusdt', coin: 'BTC' },
 
   // ETH
