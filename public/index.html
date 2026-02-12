@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aggregated Orderbook</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1a1a2e;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #888;
+    }
+
+    h1 .coin-label {
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    select {
+      background: #12121a;
+      color: #e0e0e0;
+      border: 1px solid #2a2a3e;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    select:hover { border-color: #4a4a6e; }
+
+    #legend {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #888;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #status {
+      font-size: 11px;
+      color: #555;
+    }
+
+    .book {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 8px;
+    }
+
+    .book-side {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #spread {
+      text-align: center;
+      padding: 6px;
+      font-size: 11px;
+      color: #666;
+      background: #0f0f18;
+      border-radius: 4px;
+      margin: 4px 0;
+      grid-column: 1 / -1;
+    }
+
+    .side-header {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 8px;
+      display: flex;
+    }
+
+    .side-header.bids-header { justify-content: flex-end; }
+
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 1px 4px;
+      font-size: 12px;
+      position: relative;
+      height: 22px;
+    }
+
+    .row:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .price {
+      width: 100px;
+      text-align: right;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .bid .price { color: #26a69a; }
+    .ask .price { color: #ef5350; }
+
+    .amount {
+      width: 85px;
+      text-align: right;
+      color: #888;
+      flex-shrink: 0;
+      font-size: 11px;
+    }
+
+    .exchanges {
+      display: flex;
+      gap: 2px;
+      width: 50px;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+
+    .exchange-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .bar-bg {
+      flex: 1;
+      height: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bar {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      border-radius: 2px;
+      opacity: 0.15;
+    }
+
+    .bid .bar-bg { direction: rtl; }
+    .bid-bar { background: #26a69a; right: 0; }
+    .ask-bar { background: #ef5350; left: 0; }
+
+    /* Bid rows: bar | exchanges | amount | price (right-aligned) */
+    .bid { flex-direction: row; }
+    /* Ask rows: price | amount | exchanges | bar (left-aligned) */
+    .ask { flex-direction: row; }
+
+    footer {
+      margin-top: 24px;
+      padding-top: 12px;
+      border-top: 1px solid #1a1a2e;
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+    }
+
+    footer a { color: #666; text-decoration: none; }
+    footer a:hover { color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Aggregated Orderbook — <span class="coin-label" id="coin-label">BTC</span></h1>
+      <div class="controls">
+        <select id="coin-select"></select>
+        <span id="status">Connecting...</span>
+      </div>
+    </header>
+
+    <div id="legend"></div>
+
+    <div class="book">
+      <div class="book-side">
+        <div class="side-header bids-header">
+          <span style="flex:1"></span>
+          <span style="width:50px;text-align:center">Src</span>
+          <span style="width:85px;text-align:right">Amount</span>
+          <span style="width:100px;text-align:right">Bid</span>
+        </div>
+        <div id="bids"></div>
+      </div>
+      <div class="book-side">
+        <div class="side-header">
+          <span style="width:100px;text-align:right">Ask</span>
+          <span style="width:85px;text-align:right">Amount</span>
+          <span style="width:50px;text-align:center">Src</span>
+          <span style="flex:1"></span>
+        </div>
+        <div id="asks"></div>
+      </div>
+      <div id="spread">Spread: --</div>
+    </div>
+
+    <footer>
+      <a href="https://github.com/nickvdyck/aggregated-orderbooks">GitHub</a> ·
+      Powered by <a href="https://okotoki.com">okotoki</a>
+    </footer>
+  </div>
+  <script src="bundle.js"></script>
+</body>
+</html>

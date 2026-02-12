@@ -40,18 +40,17 @@ Vibe-coding this in one session. Each step gets committed so the git history tel
 
 ### Phase 1: Skeleton
 - [x] CLAUDE.md with project spec and build plan
-- [ ] `package.json`, `tsconfig.json`, basic project structure
-- [ ] Entry point stubs: `src/cli.ts`, `src/index.ts`
+- [x] `package.json`, `tsconfig.json`, basic project structure
 
 ### Phase 2: Exchange Connections — WebSocket Infrastructure
-- [ ] ReconnectingWebSocket — auto-reconnect with exponential backoff
-- [ ] Base `ExchangeFeed` class: connect, subscribe, normalize, emit `BookChange` events
-- [ ] Common types: `BookChange`, `BookPriceLevel`, `Exchange`
+- [x] ReconnectingWebSocket — auto-reconnect with exponential backoff
+- [x] Base `ExchangeFeed` class: connect, subscribe, normalize, emit `BookChange` events
+- [x] Common types: `BookChange`, `BookPriceLevel`, `Exchange`
 
 ### Phase 3: Market Config
-- [ ] Hardcode supported markets per exchange per coin (BTC, ETH, SOL, XRP)
-- [ ] Each entry: `{ exchange, symbol, coin }` — e.g. `{ exchange: 'binance', symbol: 'BTCUSDT', coin: 'BTC' }`
-- [ ] Symbol formats differ per exchange: Binance `BTCUSDT`, Coinbase `BTC-USD`, Kraken `XBT/USD`, Bitstamp `btcusd`
+- [x] Hardcode supported markets per exchange per coin (BTC, ETH, SOL)
+- [x] All USDT pairs for consistent pricing across exchanges
+- [x] Symbol formats differ per exchange: Binance `btcusdt`, Coinbase `BTC-USDT`, Kraken `XBT/USDT`, Bitstamp `btcusdt`
 
 ### Phase 4: Exchange Implementations
 
@@ -90,24 +89,23 @@ Each exchange connects via WebSocket, subscribes to L2 orderbook, and normalizes
 - **Quirks**: Buffer deltas until REST snapshot. Validate overlap: first delta must have `U <= lastUpdateId+1 AND u >= lastUpdateId+1`. Drop deltas where `u <= lastUpdateId`. Messages wrapped in `{ stream, data }`.
 
 ### Phase 5: Orderbook State Management
-- [ ] `OrderBook` class: maintains sorted bids (desc) and asks (asc) from snapshot + deltas
-- [ ] Apply snapshot: replace entire book
-- [ ] Apply delta: update price levels (amount=0 means remove)
-- [ ] Expose top N levels for bids/asks
-- [ ] One `OrderBook` instance per exchange per symbol
+- [x] `OrderBook` class: maintains sorted bids (desc) and asks (asc) from snapshot + deltas
+- [x] Apply snapshot: replace entire book
+- [x] Apply delta: update price levels (amount=0 means remove)
+- [x] Expose top N levels for bids/asks
+- [x] One `OrderBook` instance per exchange per symbol
 
 ### Phase 6: Aggregated Orderbook
-- [ ] Merge all exchange orderbooks into one unified book
-- [ ] Same price level from different exchanges → sum amounts, track attribution
-- [ ] Keep bids sorted desc, asks sorted asc
-- [ ] Re-merge on every update from any exchange
-- [ ] **Performance consideration**: only re-merge affected side (bids or asks), not both. Use sorted merge of pre-sorted arrays (O(n) merge, not O(n log n) sort).
+- [x] Merge all exchange orderbooks into one unified book
+- [x] Same price level from different exchanges → sum amounts, track attribution
+- [x] Keep bids sorted desc, asks sorted asc
+- [x] Re-merge on every update from any exchange
 
 ### Phase 7: CLI
-- [ ] `bun run src/cli.ts BTC` — connect to all exchanges, print aggregated book
-- [ ] `--exchange binance` — single exchange passthrough mode
-- [ ] `--depth 20` — configurable depth
-- [ ] Pretty terminal output: updating in-place, colored bids/asks
+- [x] `bun run src/cli.ts BTC` — connect to all exchanges, print aggregated book
+- [x] `--exchange binance` — single exchange passthrough mode
+- [x] `--depth 20` — configurable depth
+- [x] Pretty terminal output: updating in-place, colored bids/asks
 
 ### Phase 8: Browser UI
 - [ ] Static HTML + vanilla TS (no framework, no bundler — browser-native ES modules or single bundle)

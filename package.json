@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "cli": "bun run src/cli.ts"
+    "cli": "bun run src/cli.ts",
+    "build": "bun build src/browser.ts --outfile public/bundle.js --target=browser --minify",
+    "dev": "bun build src/browser.ts --outfile public/bundle.js --target=browser --watch"
   },
   "devDependencies": {
     "@types/bun": "^1.3.9",
