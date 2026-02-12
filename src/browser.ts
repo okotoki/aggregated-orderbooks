@@ -77,18 +77,48 @@ function render() {
   updateLegend(allBooks)
 }
 
+/**
+ * Fill gaps in a level array so every bin step is represented.
+ * Missing bins get amount=0, no exchanges.
+ */
+function fillGaps(levels: AggregatedLevel[], grouping: number, depth: number, direction: 'desc' | 'asc'): AggregatedLevel[] {
+  if (levels.length === 0 || grouping <= 0) return levels
+  const filled: AggregatedLevel[] = []
+  let price = levels[0].price
+  let idx = 0
+
+  while (filled.length < depth) {
+    // Round to avoid floating point drift
+    const rounded = Math.round(price * 1e8) / 1e8
+
+    if (idx < levels.length && Math.abs(levels[idx].price - rounded) < grouping * 0.01) {
+      filled.push(levels[idx])
+      idx++
+    } else {
+      filled.push({ price: rounded, amount: 0, exchanges: [] })
+    }
+
+    price = direction === 'desc' ? price - grouping : price + grouping
+  }
+
+  return filled
+}
+
 function renderBook(book: AggregatedBook) {
   const bidsEl = document.getElementById('bids')!
   const asksEl = document.getElementById('asks')!
 
+  const bids = fillGaps(book.bids, book.grouping, currentDepth, 'desc')
+  const asks = fillGaps(book.asks, book.grouping, currentDepth, 'asc')
+
   const maxAmount = Math.max(
-    ...book.bids.map((l) => l.amount),
-    ...book.asks.map((l) => l.amount),
+    ...bids.map((l) => l.amount),
+    ...asks.map((l) => l.amount),
     0.001
   )
 
-  bidsEl.innerHTML = book.bids.map((l) => renderBidRow(l, maxAmount)).join('')
-  asksEl.innerHTML = book.asks.map((l) => renderAskRow(l, maxAmount)).join('')
+  bidsEl.innerHTML = bids.map((l) => renderBidRow(l, maxAmount)).join('')
+  asksEl.innerHTML = asks.map((l) => renderAskRow(l, maxAmount)).join('')
 
   // Spread
   if (book.bids.length > 0 && book.asks.length > 0) {
@@ -103,7 +133,9 @@ function renderBook(book: AggregatedBook) {
 }
 
 function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
-  const pct = (level.amount / maxAmount) * 100
+  const empty = level.amount === 0
+  const pct = empty ? 0 : (level.amount / maxAmount) * 100
+  const cls = empty ? 'row bid empty' : 'row bid'
   const exchangeDots = level.exchanges
     .map(
       (e) =>
@@ -111,16 +143,18 @@ function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
     )
     .join('')
 
-  return `<div class="row bid">
+  return `<div class="${cls}">
     <div class="bar-bg"><div class="bar bid-bar" style="width:${pct}%"></div></div>
     <span class="exchanges">${exchangeDots}</span>
-    <span class="amount">${level.amount.toFixed(4)}</span>
+    <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
     <span class="price">${level.price.toFixed(2)}</span>
   </div>`
 }
 
 function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
-  const pct = (level.amount / maxAmount) * 100
+  const empty = level.amount === 0
+  const pct = empty ? 0 : (level.amount / maxAmount) * 100
+  const cls = empty ? 'row ask empty' : 'row ask'
   const exchangeDots = level.exchanges
     .map(
       (e) =>
@@ -128,9 +162,9 @@ function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
     )
     .join('')
 
-  return `<div class="row ask">
+  return `<div class="${cls}">
     <span class="price">${level.price.toFixed(2)}</span>
-    <span class="amount">${level.amount.toFixed(4)}</span>
+    <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
     <span class="exchanges">${exchangeDots}</span>
     <div class="bar-bg"><div class="bar ask-bar" style="width:${pct}%"></div></div>
   </div>`
