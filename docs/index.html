@@ -252,6 +252,7 @@
       font-weight: 700;
     }
 
+    .about strong { color: var(--text); font-weight: 500; }
     .about p { margin-bottom: 8px; }
     .about p:last-child { margin-bottom: 0; }
 
@@ -311,17 +312,18 @@
     <div class="about">
       <h2>What is this?</h2>
       <p>
-        A real-time aggregated orderbook that combines L2 order data from 4 crypto exchanges
-        (Binance, Coinbase, Kraken, Bitstamp) into a single unified view. Each row shows the
-        total liquidity at a price level across all exchanges, with colored dots indicating
-        which exchanges contribute. Price levels are grouped into bins for readability.
+        <strong>Real-time aggregated orderbook</strong> combining L2 order data from
+        <strong>4 crypto exchanges</strong> (Binance, Coinbase, Kraken, Bitstamp) into a
+        single unified view. Each row shows total liquidity at a price level across all
+        exchanges, with <strong>colored bars</strong> showing each exchange's contribution.
+        Price levels are grouped into bins for readability.
       </p>
       <p>
-        Everything runs in your browser — direct WebSocket connections to each exchange,
-        no backend needed. Zero dependencies, 13KB bundle.
+        <strong>Runs entirely in your browser</strong> — direct WebSocket connections to
+        each exchange, no backend needed. <strong>Zero dependencies</strong>, 16KB bundle.
       </p>
       <p>
-        Also available as a CLI tool:
+        Also available as a <strong>CLI tool</strong>:
         <code>bun run src/cli.ts BTC</code> — run
         <code>--exchange=binance</code> for a single exchange or
         <code>--depth=30</code> for more levels.
