@@ -19,6 +19,7 @@ export class BitstampFeed extends ExchangeFeed {
   protected readonly wssUrl = 'wss://ws.bitstamp.net'
 
   private snapshots = new Map<string, SnapshotState>()
+  private symbols: string[] = []
 
   protected mapToSubscribeMessages(symbols: string[]) {
     return symbols.map((symbol) => ({
@@ -33,29 +34,30 @@ export class BitstampFeed extends ExchangeFeed {
   }
 
   start(symbols: string[], onBookChange: BookChangeCallback) {
-    for (const symbol of symbols) {
-      this.snapshots.set(symbol, { received: false, bufferedUpdates: [] })
-    }
+    this.symbols = symbols
     super.start(symbols, onBookChange)
   }
 
   protected onConnected() {
-    for (const [symbol] of this.snapshots) {
+    // Reset state on every (re)connect — old book is stale
+    for (const symbol of this.symbols) {
+      this.snapshots.set(symbol, { received: false, bufferedUpdates: [] })
+    }
+    for (const symbol of this.symbols) {
       this.fetchRestSnapshot(symbol)
     }
   }
 
   private async fetchRestSnapshot(symbol: string) {
-    await new Promise((r) => setTimeout(r, 1500))
-
     try {
-      const url = `https://www.bitstamp.net/api/v2/order_book/${symbol}?group=1`
+      // group=2 means no grouping — full price resolution
+      const url = `https://www.bitstamp.net/api/v2/order_book/${symbol}?group=2`
       const response = await fetch(url)
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const data = await response.json()
 
       const state = this.snapshots.get(symbol)
-      if (!state) return
+      if (!state || state.received) return
 
       const snapshotMicro = data.microtimestamp
         ? Number(data.microtimestamp)
@@ -64,7 +66,7 @@ export class BitstampFeed extends ExchangeFeed {
       state.received = true
       state.microtimestamp = snapshotMicro
 
-      // Emit snapshot directly
+      // Emit snapshot
       this.emit({
         exchange: 'bitstamp',
         symbol: symbol.toUpperCase(),
@@ -77,6 +79,7 @@ export class BitstampFeed extends ExchangeFeed {
       // Replay buffered deltas newer than snapshot
       for (const update of state.bufferedUpdates) {
         if (Number(update.microtimestamp) > snapshotMicro) {
+          state.microtimestamp = Number(update.microtimestamp)
           this.emit({
             exchange: 'bitstamp',
             symbol: symbol.toUpperCase(),
@@ -89,9 +92,11 @@ export class BitstampFeed extends ExchangeFeed {
       }
       state.bufferedUpdates = []
 
-      console.log(`[bitstamp] snapshot received for ${symbol}`)
+      console.log(`[bitstamp] snapshot for ${symbol}: ${data.bids.length} bids, ${data.asks.length} asks`)
     } catch (e) {
       console.error(`[bitstamp] failed to fetch snapshot for ${symbol}:`, e)
+      // Retry after delay
+      setTimeout(() => this.fetchRestSnapshot(symbol), 3000)
     }
   }
 
@@ -115,6 +120,8 @@ export class BitstampFeed extends ExchangeFeed {
       ) {
         return undefined
       }
+
+      state.microtimestamp = Number(msg.data.microtimestamp)
 
       return {
         exchange: 'bitstamp',

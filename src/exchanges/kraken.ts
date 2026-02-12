@@ -29,7 +29,7 @@ export class KrakenFeed extends ExchangeFeed {
     const symbol = msg[msg.length - 1] as string
 
     // Snapshot: [channelID, { as: [], bs: [] }, channelName, pair]
-    if ('as' in msg[1]) {
+    if (msg[1] && 'as' in msg[1]) {
       return {
         exchange: 'kraken',
         symbol,
@@ -40,15 +40,24 @@ export class KrakenFeed extends ExchangeFeed {
       }
     }
 
-    // Delta: bids and asks may be in separate objects or combined
-    const asks: BookPriceLevel[] = 'a' in msg[1] ? mapLevels(msg[1].a) : []
+    // Delta: bids and asks can be in msg[1] and/or msg[2] in any order
+    // Possible formats:
+    //   [channelID, {a: [...]}, channelName, pair]
+    //   [channelID, {b: [...]}, channelName, pair]
+    //   [channelID, {a: [...]}, {b: [...]}, channelName, pair]
+    //   [channelID, {b: [...]}, {a: [...]}, channelName, pair]
     const bids: BookPriceLevel[] = []
+    const asks: BookPriceLevel[] = []
 
-    if ('b' in msg[1]) {
-      bids.push(...mapLevels(msg[1].b))
-    } else if (msg[2] && typeof msg[2] !== 'string' && 'b' in msg[2]) {
-      bids.push(...mapLevels(msg[2].b))
+    // Check msg[1] and msg[2] for both 'a' and 'b'
+    for (let i = 1; i < msg.length - 2; i++) {
+      const part = msg[i]
+      if (!part || typeof part !== 'object') continue
+      if ('a' in part) asks.push(...mapLevels(part.a))
+      if ('b' in part) bids.push(...mapLevels(part.b))
     }
+
+    if (bids.length === 0 && asks.length === 0) return undefined
 
     return {
       exchange: 'kraken',
@@ -56,7 +65,7 @@ export class KrakenFeed extends ExchangeFeed {
       isSnapshot: false,
       bids,
       asks,
-      timestamp: getTimestamp(bids.length ? msg[1].b || msg[2]?.b : [], asks.length ? msg[1].a || [] : []),
+      timestamp: new Date(),
     }
   }
 }

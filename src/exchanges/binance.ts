@@ -4,7 +4,6 @@ import type { BookChange, BookPriceLevel, Exchange } from '../types'
 type DepthState = {
   snapshotProcessed: boolean
   lastUpdateId?: number
-  validatedFirstUpdate: boolean
   bufferedUpdates: BinanceDepthData[]
 }
 
@@ -28,7 +27,7 @@ export class BinanceFeed extends ExchangeFeed {
     return [
       {
         method: 'SUBSCRIBE',
-        params: symbols.map((s) => `${s}@depth`),
+        params: symbols.map((s) => `${s}@depth@100ms`),
         id: 1,
       },
     ]
@@ -43,27 +42,24 @@ export class BinanceFeed extends ExchangeFeed {
 
   start(symbols: string[], onBookChange: BookChangeCallback) {
     this.symbols = symbols
-    for (const symbol of symbols) {
-      this.depthStates.set(symbol, {
-        snapshotProcessed: false,
-        validatedFirstUpdate: false,
-        bufferedUpdates: [],
-      })
-    }
     super.start(symbols, onBookChange)
   }
 
   protected onConnected() {
-    // Fetch REST snapshots after subscribing
+    // Reset state on every (re)connect — old book is stale
+    for (const symbol of this.symbols) {
+      this.depthStates.set(symbol, {
+        snapshotProcessed: false,
+        bufferedUpdates: [],
+      })
+    }
+    // Fetch REST snapshots
     for (const symbol of this.symbols) {
       this.fetchRestSnapshot(symbol)
     }
   }
 
   private async fetchRestSnapshot(symbol: string) {
-    // Wait for some deltas to arrive first
-    await new Promise((r) => setTimeout(r, 2000))
-
     try {
       const upperSymbol = symbol.toUpperCase()
       const url = `https://api.binance.com/api/v3/depth?symbol=${upperSymbol}&limit=5000`
@@ -77,26 +73,63 @@ export class BinanceFeed extends ExchangeFeed {
       state.lastUpdateId = data.lastUpdateId
       state.snapshotProcessed = true
 
-      // Apply buffered updates to snapshot
+      // Build snapshot map for efficient delta application
+      const bidMap = new Map<string, string>()
+      const askMap = new Map<string, string>()
+      for (const [p, a] of data.bids) bidMap.set(p, a)
+      for (const [p, a] of data.asks) askMap.set(p, a)
+
+      // Apply buffered updates that are newer than the snapshot
+      let foundFirstValid = false
       for (const update of state.bufferedUpdates) {
+        // Drop events where u <= lastUpdateId
         if (update.u <= data.lastUpdateId) continue
-        applyDeltaToSnapshot(data, update)
+
+        // First valid event must satisfy: U <= lastUpdateId+1 AND u >= lastUpdateId+1
+        if (!foundFirstValid) {
+          if (update.U > data.lastUpdateId + 1) {
+            // Gap — snapshot too old, re-fetch
+            console.warn(`[binance] gap detected for ${symbol}, re-fetching snapshot`)
+            state.snapshotProcessed = false
+            state.bufferedUpdates = []
+            this.fetchRestSnapshot(symbol)
+            return
+          }
+          foundFirstValid = true
+        }
+
+        state.lastUpdateId = update.u
+        for (const [p, a] of update.b) bidMap.set(p, a)
+        for (const [p, a] of update.a) askMap.set(p, a)
       }
       state.bufferedUpdates = []
 
-      // Emit snapshot directly
+      // Convert maps to level arrays
+      const bids: BookPriceLevel[] = []
+      for (const [p, a] of bidMap) {
+        const amount = Number(a)
+        if (amount > 0) bids.push({ price: Number(p), amount })
+      }
+      const asks: BookPriceLevel[] = []
+      for (const [p, a] of askMap) {
+        const amount = Number(a)
+        if (amount > 0) asks.push({ price: Number(p), amount })
+      }
+
       this.emit({
         exchange: 'binance',
         symbol: upperSymbol,
         isSnapshot: true,
-        bids: mapLevels(data.bids),
-        asks: mapLevels(data.asks),
+        bids,
+        asks,
         timestamp: new Date(),
       })
 
-      console.log(`[binance] snapshot received for ${symbol}`)
+      console.log(`[binance] snapshot for ${symbol}: ${bids.length} bids, ${asks.length} asks`)
     } catch (e) {
       console.error(`[binance] failed to fetch snapshot for ${symbol}:`, e)
+      // Retry after delay
+      setTimeout(() => this.fetchRestSnapshot(symbol), 3000)
     }
   }
 
@@ -116,19 +149,6 @@ export class BinanceFeed extends ExchangeFeed {
     // Drop stale updates
     if (data.u <= state.lastUpdateId!) return undefined
 
-    // Validate first update after snapshot
-    if (!state.validatedFirstUpdate) {
-      if (
-        data.U <= state.lastUpdateId! + 1 &&
-        data.u >= state.lastUpdateId! + 1
-      ) {
-        state.validatedFirstUpdate = true
-      } else {
-        // Skip — might be gap, will self-heal on reconnect
-        state.validatedFirstUpdate = true
-      }
-    }
-
     state.lastUpdateId = data.u
 
     return {
@@ -147,20 +167,4 @@ function mapLevels(levels: [string, string][]): BookPriceLevel[] {
     price: Number(price),
     amount: Number(amount),
   }))
-}
-
-function applyDeltaToSnapshot(
-  snapshot: { bids: [string, string][]; asks: [string, string][] },
-  delta: BinanceDepthData
-) {
-  for (const bid of delta.b) {
-    const existing = snapshot.bids.find((b) => b[0] === bid[0])
-    if (existing) existing[1] = bid[1]
-    else snapshot.bids.push(bid)
-  }
-  for (const ask of delta.a) {
-    const existing = snapshot.asks.find((a) => a[0] === ask[0])
-    if (existing) existing[1] = ask[1]
-    else snapshot.asks.push(ask)
-  }
 }
