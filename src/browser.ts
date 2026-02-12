@@ -132,20 +132,27 @@ function renderBook(book: AggregatedBook) {
   updateGroupingOptions(book.grouping)
 }
 
+function renderExchangeBar(level: AggregatedLevel, maxAmount: number): string {
+  if (level.amount === 0) return ''
+  const title = level.exchanges
+    .map((e) => `${EXCHANGE_NAMES[e.exchange]}: ${e.amount.toFixed(4)}`)
+    .join('\n')
+  // Each exchange gets a segment proportional to its share of maxAmount
+  const segments = level.exchanges
+    .map((e) => {
+      const w = (e.amount / maxAmount) * 100
+      return `<div class="bar-seg" style="width:${w}%;background:${EXCHANGE_COLORS[e.exchange]}" title="${title}"></div>`
+    })
+    .join('')
+  return segments
+}
+
 function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
   const empty = level.amount === 0
-  const pct = empty ? 0 : (level.amount / maxAmount) * 100
   const cls = empty ? 'row bid empty' : 'row bid'
-  const exchangeDots = level.exchanges
-    .map(
-      (e) =>
-        `<span class="exchange-dot" style="background:${EXCHANGE_COLORS[e.exchange]}" title="${EXCHANGE_NAMES[e.exchange]}: ${e.amount.toFixed(4)}"></span>`
-    )
-    .join('')
 
   return `<div class="${cls}">
-    <div class="bar-bg"><div class="bar bid-bar" style="width:${pct}%"></div></div>
-    <span class="exchanges">${exchangeDots}</span>
+    <div class="bar-bg bid-bar-bg">${renderExchangeBar(level, maxAmount)}</div>
     <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
     <span class="price">${level.price.toFixed(2)}</span>
   </div>`
@@ -153,20 +160,12 @@ function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
 
 function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
   const empty = level.amount === 0
-  const pct = empty ? 0 : (level.amount / maxAmount) * 100
   const cls = empty ? 'row ask empty' : 'row ask'
-  const exchangeDots = level.exchanges
-    .map(
-      (e) =>
-        `<span class="exchange-dot" style="background:${EXCHANGE_COLORS[e.exchange]}" title="${EXCHANGE_NAMES[e.exchange]}: ${e.amount.toFixed(4)}"></span>`
-    )
-    .join('')
 
   return `<div class="${cls}">
     <span class="price">${level.price.toFixed(2)}</span>
     <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
-    <span class="exchanges">${exchangeDots}</span>
-    <div class="bar-bg"><div class="bar ask-bar" style="width:${pct}%"></div></div>
+    <div class="bar-bg">${renderExchangeBar(level, maxAmount)}</div>
   </div>`
 }
 
