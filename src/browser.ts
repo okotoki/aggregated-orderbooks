@@ -126,8 +126,15 @@ function renderBook(book: AggregatedBook) {
     0.001
   )
 
-  bidsEl.innerHTML = bids.map((l) => renderBidRow(l, maxAmount)).join('')
-  asksEl.innerHTML = asks.map((l) => renderAskRow(l, maxAmount)).join('')
+  // Compute cumulative amounts from spread outward
+  let bidCum = 0
+  const bidCums = bids.map((l) => { bidCum += l.amount; return bidCum })
+  let askCum = 0
+  const askCums = asks.map((l) => { askCum += l.amount; return askCum })
+  const maxCum = Math.max(bidCum, askCum, 0.001)
+
+  bidsEl.innerHTML = bids.map((l, i) => renderBidRow(l, maxAmount, bidCums[i], maxCum)).join('')
+  asksEl.innerHTML = asks.map((l, i) => renderAskRow(l, maxAmount, askCums[i], maxCum)).join('')
 
   // Spread
   if (book.bids.length > 0 && book.asks.length > 0) {
@@ -156,24 +163,30 @@ function renderExchangeBar(level: AggregatedLevel, maxAmount: number): string {
   return segments
 }
 
-function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
+function renderBidRow(level: AggregatedLevel, maxAmount: number, cumulative: number, maxCum: number): string {
   const empty = level.amount === 0
   const cls = empty ? 'row bid empty' : 'row bid'
+  const cumPct = (cumulative / maxCum) * 100
 
   return `<div class="${cls}">
     <div class="bar-bg bid-bar-bg">${renderExchangeBar(level, maxAmount)}</div>
+    <span class="cumulative">${empty ? '' : cumulative.toFixed(2)}</span>
     <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
     <span class="price">${level.price.toFixed(2)}</span>
+    <div class="cum-bar bid-cum"><div class="cum-fill" style="width:${cumPct}%"></div></div>
   </div>`
 }
 
-function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
+function renderAskRow(level: AggregatedLevel, maxAmount: number, cumulative: number, maxCum: number): string {
   const empty = level.amount === 0
   const cls = empty ? 'row ask empty' : 'row ask'
+  const cumPct = (cumulative / maxCum) * 100
 
   return `<div class="${cls}">
+    <div class="cum-bar ask-cum"><div class="cum-fill" style="width:${cumPct}%"></div></div>
     <span class="price">${level.price.toFixed(2)}</span>
     <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
+    <span class="cumulative">${empty ? '' : cumulative.toFixed(2)}</span>
     <div class="bar-bg">${renderExchangeBar(level, maxAmount)}</div>
   </div>`
 }
