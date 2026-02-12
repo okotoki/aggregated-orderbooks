@@ -127,13 +127,9 @@
     }
 
     #spread {
-      text-align: center;
-      padding: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 2px;
+      height: 2px;
+      background: var(--accent);
+      opacity: 0.5;
     }
 
     .side-header {
@@ -152,7 +148,6 @@
       padding: 0 4px;
       font-size: 13px;
       position: relative;
-      height: 30px;
       margin: 0;
     }
 
@@ -164,49 +159,53 @@
       opacity: 0.25;
     }
 
+    .price, .amount, .cumulative {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.4;
+      flex-shrink: 0;
+    }
+
     .price {
       width: 100px;
       text-align: left;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .bid .price { color: var(--bid-bright); }
-    .ask .price { color: var(--ask); }
-
-    .amount-cell {
-      width: 90px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-      line-height: 1.1;
     }
 
     .amount {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-dim);
+      width: 90px;
+      text-align: right;
     }
 
     .cumulative {
-      font-size: 9px;
-      color: var(--text-dim);
-      opacity: 0.4;
+      width: 70px;
+      text-align: right;
     }
 
     .bar-bg {
       flex: 1;
-      height: 100%;
+      min-height: 20px;
       display: flex;
       overflow: hidden;
+      align-self: stretch;
+      position: relative;
     }
 
+    .cum-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      opacity: 0.1;
+    }
+
+    .bid .cum-fill { background: var(--accent); }
+    .ask .cum-fill { background: var(--accent2); }
 
     .bar-seg {
-      height: 100%;
+      align-self: stretch;
       opacity: 0.7;
+      position: relative;
+      z-index: 1;
     }
 
     .bid, .ask { flex-direction: row; }
@@ -290,9 +289,10 @@
         <span style="width:100px">Price</span>
         <span style="width:90px;text-align:right">Amount</span>
         <span style="flex:1"></span>
+        <span style="width:70px;text-align:right">Total</span>
       </div>
       <div id="asks"></div>
-      <div id="spread">Spread: --</div>
+      <div id="spread"></div>
       <div id="bids"></div>
     </div>
 

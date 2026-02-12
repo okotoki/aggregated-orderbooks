@@ -13,7 +13,7 @@ let feeds: ExchangeFeed[] = []
 let lastRender = 0
 
 const EXCHANGE_COLORS: Record<Exchange, string> = {
-  binance: '#FF8844',
+  binance: '#BBBBFF',
   coinbase: '#33CCFF',
   kraken: '#FF3366',
   bitstamp: '#66FF99',
@@ -131,19 +131,12 @@ function renderBook(book: AggregatedBook) {
   const bidCums = bids.map((l) => { bidCum += l.amount; return bidCum })
   let askCum = 0
   const askCums = asks.map((l) => { askCum += l.amount; return askCum })
+  const maxCum = Math.max(bidCum, askCum, 0.001)
 
   // Asks: highest at top, best ask at bottom (near spread)
-  asksEl.innerHTML = asks.map((l, i) => renderRow(l, maxAmount, askCums[i], 'ask')).reverse().join('')
+  asksEl.innerHTML = asks.map((l, i) => renderRow(l, maxAmount, askCums[i], maxCum, 'ask')).reverse().join('')
   // Bids: best bid at top (near spread), descending
-  bidsEl.innerHTML = bids.map((l, i) => renderRow(l, maxAmount, bidCums[i], 'bid')).join('')
-
-  // Spread
-  if (book.bids.length > 0 && book.asks.length > 0) {
-    const spread = book.asks[0].price - book.bids[0].price
-    const spreadPct = ((spread / book.asks[0].price) * 100).toFixed(3)
-    document.getElementById('spread')!.textContent =
-      `Spread: $${spread.toFixed(2)} (${spreadPct}%)`
-  }
+  bidsEl.innerHTML = bids.map((l, i) => renderRow(l, maxAmount, bidCums[i], maxCum, 'bid')).join('')
 
   // Update grouping selector to reflect current auto value
   updateGroupingOptions(book.grouping)
@@ -164,14 +157,16 @@ function renderExchangeBar(level: AggregatedLevel, maxAmount: number): string {
   return segments
 }
 
-function renderRow(level: AggregatedLevel, maxAmount: number, cumulative: number, side: 'bid' | 'ask'): string {
+function renderRow(level: AggregatedLevel, maxAmount: number, cumulative: number, maxCum: number, side: 'bid' | 'ask'): string {
   const empty = level.amount === 0
   const cls = empty ? `row ${side} empty` : `row ${side}`
+  const cumPct = (cumulative / maxCum) * 100
 
   return `<div class="${cls}">
     <span class="price">${level.price.toFixed(2)}</span>
-    <div class="amount-cell">${empty ? '' : `<span class="amount">${level.amount.toFixed(4)}</span><span class="cumulative">${cumulative.toFixed(2)}</span>`}</div>
-    <div class="bar-bg">${renderExchangeBar(level, maxAmount)}</div>
+    <span class="amount">${empty ? '' : level.amount.toFixed(4)}</span>
+    <div class="bar-bg"><div class="cum-fill" style="width:${cumPct}%"></div>${renderExchangeBar(level, maxAmount)}</div>
+    <span class="cumulative">${empty ? '' : cumulative.toFixed(2)}</span>
   </div>`
 }
 
