@@ -108,17 +108,17 @@ Each exchange connects via WebSocket, subscribes to L2 orderbook, and normalizes
 - [x] Pretty terminal output: updating in-place, colored bids/asks
 
 ### Phase 8: Browser UI
-- [ ] Static HTML + vanilla TS (no framework, no bundler — browser-native ES modules or single bundle)
-- [ ] Connects to exchanges directly from browser (all 4 support browser WebSocket)
-- [ ] Coin selector dropdown
-- [ ] Visual orderbook: horizontal bars for bids (green, left) / asks (red, right)
-- [ ] Exchange attribution per price level (colored dots or labels)
-- [ ] Auto-updating in real-time
+- [x] Static HTML + vanilla TS, bundled with bun (13KB minified)
+- [x] Connects to exchanges directly from browser (all 4 support browser WebSocket)
+- [x] Coin selector dropdown
+- [x] Visual orderbook: horizontal bars for bids (green) / asks (red)
+- [x] Exchange attribution per price level (colored dots)
+- [x] Auto-updating in real-time
 
 ### Phase 9: Ship It
-- [ ] README.md — short, punchy, explains the "why"
+- [x] README.md — short, punchy, explains the "why"
 - [ ] GitHub Pages deployment for browser UI
-- [ ] Footer credit
+- [x] Footer credit
 
 ### Commit Strategy
 - Commit after every meaningful step (not just phases)

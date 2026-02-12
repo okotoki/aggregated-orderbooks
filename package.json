@@ -5,7 +5,8 @@
   "scripts": {
     "cli": "bun run src/cli.ts",
     "build": "bun build src/browser.ts --outfile public/bundle.js --target=browser --minify",
-    "dev": "bun build src/browser.ts --outfile public/bundle.js --target=browser --watch"
+    "dev": "bun build src/browser.ts --outfile public/bundle.js --target=browser --watch",
+    "serve": "bun run build && bun --eval \"Bun.serve({ port: 3000, fetch(req) { const url = new URL(req.url); const path = url.pathname === '/' ? '/index.html' : url.pathname; return new Response(Bun.file('public' + path)); } }); console.log('http://localhost:3000')\""
   },
   "devDependencies": {
     "@types/bun": "^1.3.9",
