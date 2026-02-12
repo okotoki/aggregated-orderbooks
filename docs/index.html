@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aggregated Orderbook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: oklch(0.15 0.03 190);
@@ -22,7 +25,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Courier New', monospace;
+      font-family: 'IBM Plex Mono', monospace;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -44,7 +47,7 @@
     }
 
     h1 {
-      font-size: 11px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-dim);
       text-transform: uppercase;
@@ -53,7 +56,7 @@
 
     h1 .coin-label {
       color: var(--accent);
-      font-size: 20px;
+      font-size: 24px;
       letter-spacing: 4px;
     }
 
@@ -103,6 +106,11 @@
 
     .legend-item.active {
       opacity: 1;
+    }
+
+    .legend-market {
+      color: var(--text-dim);
+      opacity: 0.6;
     }
 
     .exchange-status {
@@ -230,13 +238,13 @@
       background: var(--bg2);
       border: 1px solid var(--border);
       border-left: 3px solid var(--accent);
-      font-size: 14px;
-      line-height: 1.7;
+      font-size: 16px;
+      line-height: 1.8;
       color: var(--text-dim);
     }
 
     .about h2 {
-      font-size: 12px;
+      font-size: 14px;
       color: var(--accent);
       margin-bottom: 10px;
       text-transform: uppercase;

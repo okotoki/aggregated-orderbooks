@@ -26,11 +26,23 @@ const EXCHANGE_NAMES: Record<Exchange, string> = {
   bitstamp: 'Bitstamp',
 }
 
+function rebuildLegend(coin: Coin) {
+  const legend = document.getElementById('legend')!
+  const markets = getMarketsForCoin(coin)
+  legend.innerHTML = ''
+  for (const market of markets) {
+    const color = EXCHANGE_COLORS[market.exchange]
+    legend.innerHTML += `<span class="legend-item" data-exchange="${market.exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[market.exchange]} <span class="legend-market">${market.symbol}</span> <span class="exchange-status"></span></span>`
+  }
+}
+
 function startFeeds(coin: Coin) {
   // Stop existing
   for (const feed of feeds) feed.stop()
   feeds = []
   orderbooks.clear()
+
+  rebuildLegend(coin)
 
   const markets = getMarketsForCoin(coin)
   const exchangeSymbols = new Map<Exchange, string[]>()
@@ -277,12 +289,6 @@ function init() {
     lastRender = 0
     render()
   })
-
-  // Legend
-  const legend = document.getElementById('legend')!
-  for (const [exchange, color] of Object.entries(EXCHANGE_COLORS)) {
-    legend.innerHTML += `<span class="legend-item" data-exchange="${exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[exchange as Exchange]} <span class="exchange-status"></span></span>`
-  }
 
   document.getElementById('coin-label')!.textContent = currentCoin
   startFeeds(currentCoin)
