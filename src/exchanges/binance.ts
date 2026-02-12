@@ -36,7 +36,6 @@ export class BinanceFeed extends ExchangeFeed {
 
   protected messageIsError(msg: any): boolean {
     if (msg.result === null) return false // subscription confirmation
-    if (msg._injectedSnapshot) return false
     if (msg.stream === undefined) return true
     if (msg.error !== undefined) return true
     return false
@@ -67,7 +66,7 @@ export class BinanceFeed extends ExchangeFeed {
 
     try {
       const upperSymbol = symbol.toUpperCase()
-      const url = `https://data.binance.com/api/v3/depth?symbol=${upperSymbol}&limit=5000`
+      const url = `https://api.binance.com/api/v3/depth?symbol=${upperSymbol}&limit=5000`
       const response = await fetch(url)
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const data = await response.json()
@@ -85,20 +84,15 @@ export class BinanceFeed extends ExchangeFeed {
       }
       state.bufferedUpdates = []
 
-      // Emit snapshot
-      this.ws!.onmessage?.({
-        data: JSON.stringify({
-          _injectedSnapshot: true,
-          bookChange: {
-            exchange: 'binance',
-            symbol: upperSymbol,
-            isSnapshot: true,
-            bids: mapLevels(data.bids),
-            asks: mapLevels(data.asks),
-            timestamp: new Date(),
-          },
-        }),
-      } as any)
+      // Emit snapshot directly
+      this.emit({
+        exchange: 'binance',
+        symbol: upperSymbol,
+        isSnapshot: true,
+        bids: mapLevels(data.bids),
+        asks: mapLevels(data.asks),
+        timestamp: new Date(),
+      })
 
       console.log(`[binance] snapshot received for ${symbol}`)
     } catch (e) {
@@ -107,8 +101,6 @@ export class BinanceFeed extends ExchangeFeed {
   }
 
   protected mapMessage(msg: any): BookChange | undefined {
-    if (msg._injectedSnapshot) return msg.bookChange
-
     if (!msg.stream?.includes('@depth')) return undefined
 
     const data = msg.data as BinanceDepthData

@@ -29,13 +29,10 @@ export class BitstampFeed extends ExchangeFeed {
 
   protected messageIsError(msg: any): boolean {
     if (msg.event === 'bts:request_reconnect') return true
-    if (msg.channel === undefined && msg.event !== 'bts:subscription_succeeded')
-      return false
     return false
   }
 
   start(symbols: string[], onBookChange: BookChangeCallback) {
-    // Initialize snapshot state for each symbol
     for (const symbol of symbols) {
       this.snapshots.set(symbol, { received: false, bufferedUpdates: [] })
     }
@@ -43,15 +40,13 @@ export class BitstampFeed extends ExchangeFeed {
   }
 
   protected onConnected() {
-    // Fetch REST snapshots after subscribing
     for (const [symbol] of this.snapshots) {
       this.fetchRestSnapshot(symbol)
     }
   }
 
   private async fetchRestSnapshot(symbol: string) {
-    // Wait a bit for WS to start delivering deltas
-    await new Promise((r) => setTimeout(r, 1000))
+    await new Promise((r) => setTimeout(r, 1500))
 
     try {
       const url = `https://www.bitstamp.net/api/v2/order_book/${symbol}?group=1`
@@ -69,35 +64,27 @@ export class BitstampFeed extends ExchangeFeed {
       state.received = true
       state.microtimestamp = snapshotMicro
 
-      // Emit snapshot
-      const bookChange: BookChange = {
+      // Emit snapshot directly
+      this.emit({
         exchange: 'bitstamp',
         symbol: symbol.toUpperCase(),
         isSnapshot: true,
         bids: mapLevels(data.bids),
         asks: mapLevels(data.asks),
         timestamp: new Date(snapshotMicro / 1000),
-      }
-
-      // Manually invoke the callback through the ws message path
-      // We need to call onBookChange which is private in base, so we use a workaround
-      this.ws!.onmessage?.({
-        data: JSON.stringify({
-          _injectedSnapshot: true,
-          bookChange,
-        }),
-      } as any)
+      })
 
       // Replay buffered deltas newer than snapshot
       for (const update of state.bufferedUpdates) {
         if (Number(update.microtimestamp) > snapshotMicro) {
-          this.ws!.onmessage?.({
-            data: JSON.stringify({
-              event: 'data',
-              channel: `diff_order_book_${symbol}`,
-              data: update,
-            }),
-          } as any)
+          this.emit({
+            exchange: 'bitstamp',
+            symbol: symbol.toUpperCase(),
+            isSnapshot: false,
+            bids: mapLevels(update.bids),
+            asks: mapLevels(update.asks),
+            timestamp: new Date(Number(update.microtimestamp) / 1000),
+          })
         }
       }
       state.bufferedUpdates = []
@@ -109,11 +96,6 @@ export class BitstampFeed extends ExchangeFeed {
   }
 
   protected mapMessage(msg: any): BookChange | undefined {
-    // Handle injected snapshots
-    if (msg._injectedSnapshot) {
-      return msg.bookChange
-    }
-
     if (msg.event === 'bts:subscription_succeeded') return undefined
     if (!msg.channel?.startsWith('diff_order_book_')) return undefined
 
@@ -123,12 +105,10 @@ export class BitstampFeed extends ExchangeFeed {
 
     if (msg.event === 'data') {
       if (!state.received) {
-        // Buffer until snapshot arrives
         state.bufferedUpdates.push(msg.data)
         return undefined
       }
 
-      // Skip if older than snapshot
       if (
         state.microtimestamp &&
         Number(msg.data.microtimestamp) <= state.microtimestamp

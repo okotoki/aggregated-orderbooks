@@ -35,7 +35,7 @@ for (const market of markets) {
   existing.push(market.symbol)
   exchangeSymbols.set(market.exchange, existing)
 
-  const key = `${market.exchange}:${market.symbol}`
+  const key = `${market.exchange}:${market.symbol}`.toLowerCase()
   orderbooks.set(key, new OrderBook(market.exchange, market.symbol))
 }
 
@@ -45,7 +45,7 @@ for (const [exchange, symbols] of exchangeSymbols) {
   feeds.push(feed)
 
   feed.start(symbols, (bookChange) => {
-    const key = `${bookChange.exchange}:${bookChange.symbol}`
+    const key = `${bookChange.exchange}:${bookChange.symbol}`.toLowerCase()
     const ob = orderbooks.get(key)
     if (ob) {
       ob.apply(bookChange)

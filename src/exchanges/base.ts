@@ -71,10 +71,10 @@ export abstract class ExchangeFeed {
   /** Override if exchange needs to fetch REST snapshots after connecting */
   protected onConnected() {}
 
-  /** Fetch a REST snapshot and inject it as a BookChange */
-  protected async fetchAndInjectSnapshot(
-    _symbol: string
-  ): Promise<void> {}
+  /** Emit a BookChange directly (used for injecting REST snapshots) */
+  protected emit(bookChange: BookChange) {
+    this.onBookChange?.(bookChange)
+  }
 
   private startStaleMonitor() {
     this.staleTimer = setInterval(() => {
