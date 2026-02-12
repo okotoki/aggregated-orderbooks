@@ -6,7 +6,7 @@ import type { Coin, Exchange } from './types'
 import type { ExchangeFeed } from './exchanges/base'
 
 let currentCoin: Coin = 'BTC'
-let currentDepth = 25
+let currentDepth = 20
 let currentGrouping: number | undefined = undefined // undefined = auto
 let orderbooks = new Map<string, OrderBook>()
 let feeds: ExchangeFeed[] = []
