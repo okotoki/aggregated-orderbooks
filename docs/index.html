@@ -167,7 +167,7 @@
       padding: 0 4px;
       font-size: 13px;
       position: relative;
-      height: 24px;
+      height: 28px;
       margin: 0;
     }
 
@@ -189,43 +189,27 @@
     .bid .price { color: var(--bid-bright); }
     .ask .price { color: var(--ask); }
 
-    .amount {
+    .amount-cell {
       width: 90px;
-      text-align: right;
-      color: var(--text-dim);
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      line-height: 1.1;
+    }
+
+    .amount {
       font-size: 13px;
       font-weight: 700;
+      color: var(--text-dim);
     }
 
     .cumulative {
-      width: 80px;
-      text-align: right;
+      font-size: 9px;
       color: var(--text-dim);
-      opacity: 0.5;
-      flex-shrink: 0;
-      font-size: 11px;
+      opacity: 0.4;
     }
-
-    .cum-bar {
-      width: 40px;
-      height: 100%;
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .bid-cum {
-      direction: rtl;
-    }
-
-    .cum-fill {
-      height: 100%;
-      opacity: 0.15;
-    }
-
-    .bid .cum-fill { background: var(--accent); }
-    .ask .cum-fill { background: var(--accent2); }
 
     .bar-bg {
       flex: 1;
@@ -324,19 +308,15 @@
       <div class="book-side">
         <div class="side-header bids-header">
           <span style="flex:1"></span>
-          <span style="width:80px;text-align:right">Total</span>
           <span style="width:90px;text-align:right">Amount</span>
           <span style="width:100px;text-align:right">Bid</span>
-          <span style="width:40px"></span>
         </div>
         <div id="bids"></div>
       </div>
       <div class="book-side">
         <div class="side-header">
-          <span style="width:40px"></span>
           <span style="width:100px;text-align:right">Ask</span>
           <span style="width:90px;text-align:right">Amount</span>
-          <span style="width:80px;text-align:right">Total</span>
           <span style="flex:1"></span>
         </div>
         <div id="asks"></div>

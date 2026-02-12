@@ -3,7 +3,7 @@ import type { Market, Coin } from './types'
 export const MARKETS: Market[] = [
   // BTC — all USDT for consistent pricing
   { exchange: 'binance', symbol: 'btcusdt', coin: 'BTC' },
-  { exchange: 'coinbase', symbol: 'BTC-USDT', coin: 'BTC' },
+  { exchange: 'coinbase', symbol: 'BTC-USD', coin: 'BTC' },
   { exchange: 'kraken', symbol: 'XBT/USDT', coin: 'BTC' },
   { exchange: 'bitstamp', symbol: 'btcusdt', coin: 'BTC' },
 
