@@ -10,7 +10,7 @@ export class KrakenFeed extends ExchangeFeed {
       {
         event: 'subscribe',
         pair: symbols,
-        subscription: { name: 'book', depth: 500 },
+        subscription: { name: 'book', depth: 1000 },
       },
     ]
   }

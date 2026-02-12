@@ -73,10 +73,8 @@ function render() {
   const allBooks = Array.from(orderbooks.values())
   const book = aggregate(allBooks, currentDepth, currentGrouping)
 
-  const readyCount = allBooks.filter((ob) => ob.ready).length
-  updateStatus(`${readyCount}/${orderbooks.size} exchanges connected`)
-
   renderBook(book)
+  updateLegend(allBooks)
 }
 
 function renderBook(book: AggregatedBook) {
@@ -141,6 +139,35 @@ function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
 function updateStatus(text: string) {
   const el = document.getElementById('status')
   if (el) el.textContent = text
+}
+
+function updateLegend(allBooks: OrderBook[]) {
+  const legend = document.getElementById('legend')!
+  const items = legend.querySelectorAll('.legend-item')
+
+  for (const item of items) {
+    const exchange = item.getAttribute('data-exchange') as Exchange
+    if (!exchange) continue
+
+    const books = allBooks.filter((ob) => ob.exchange === exchange)
+    const statusEl = item.querySelector('.exchange-status') as HTMLElement
+    if (!statusEl) continue
+
+    if (books.length === 0) {
+      statusEl.textContent = ''
+      item.classList.remove('active')
+    } else if (books.some((ob) => ob.ready)) {
+      const totalLevels = books.reduce((sum, ob) => sum + ob.levelCount, 0)
+      statusEl.textContent = `${totalLevels}`
+      item.classList.add('active')
+    } else {
+      statusEl.textContent = '...'
+      item.classList.remove('active')
+    }
+  }
+
+  const readyCount = allBooks.filter((ob) => ob.ready).length
+  updateStatus(`${readyCount}/${allBooks.length}`)
 }
 
 function getGroupingOptions(baseGrouping: number): number[] {
@@ -221,7 +248,7 @@ function init() {
   // Legend
   const legend = document.getElementById('legend')!
   for (const [exchange, color] of Object.entries(EXCHANGE_COLORS)) {
-    legend.innerHTML += `<span class="legend-item"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[exchange as Exchange]}</span>`
+    legend.innerHTML += `<span class="legend-item" data-exchange="${exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[exchange as Exchange]} <span class="exchange-status"></span></span>`
   }
 
   document.getElementById('coin-label')!.textContent = currentCoin

@@ -36,6 +36,10 @@ export class OrderBook {
     return this._bids.size > 0 || this._asks.size > 0
   }
 
+  get levelCount(): number {
+    return this._bids.size + this._asks.size
+  }
+
   apply(change: BookChange) {
     if (change.isSnapshot) {
       this._bids.clear()
