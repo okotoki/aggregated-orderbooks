@@ -137,6 +137,13 @@
       flex-direction: column;
     }
 
+    #bids, #asks {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      line-height: 1;
+    }
+
     #spread {
       text-align: center;
       padding: 4px;
@@ -167,6 +174,7 @@
       font-size: 13px;
       position: relative;
       height: 24px;
+      margin: 0;
     }
 
     .row:hover {
@@ -197,7 +205,7 @@
 
     .bar-bg {
       flex: 1;
-      height: 20px;
+      height: 100%;
       display: flex;
       overflow: hidden;
     }
