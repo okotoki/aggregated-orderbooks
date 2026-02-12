@@ -13,10 +13,10 @@ let feeds: ExchangeFeed[] = []
 let lastRender = 0
 
 const EXCHANGE_COLORS: Record<Exchange, string> = {
-  binance: '#F0B90B',
-  coinbase: '#0052FF',
-  kraken: '#7B61FF',
-  bitstamp: '#4A9C5E',
+  binance: '#FFD600',
+  coinbase: '#4D8AFF',
+  kraken: '#A78BFA',
+  bitstamp: '#34D399',
 }
 
 const EXCHANGE_NAMES: Record<Exchange, string> = {
