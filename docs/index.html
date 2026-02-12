@@ -47,7 +47,7 @@
     }
 
     h1 {
-      font-size: 14px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--text-dim);
       text-transform: uppercase;
@@ -56,7 +56,7 @@
 
     h1 .coin-label {
       color: var(--accent);
-      font-size: 24px;
+      font-size: 28px;
       letter-spacing: 4px;
     }
 
@@ -64,16 +64,17 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      margin-left: auto;
     }
 
     select {
       background: var(--bg2);
       color: var(--accent);
       border: 1px solid var(--border);
-      padding: 6px 10px;
+      padding: 8px 14px;
       border-radius: 0;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 14px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -117,13 +118,6 @@
     .legend-market {
       color: var(--text-dim);
       opacity: 0.6;
-    }
-
-    #status {
-      font-size: 10px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
     .book {
@@ -292,7 +286,6 @@
       <div class="controls">
         <select id="coin-select"></select>
         <select id="grouping-select"></select>
-        <span id="status">Connecting...</span>
       </div>
     </header>
 

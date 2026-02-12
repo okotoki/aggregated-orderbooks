@@ -13,7 +13,7 @@ let feeds: ExchangeFeed[] = []
 let lastRender = 0
 
 const EXCHANGE_COLORS: Record<Exchange, string> = {
-  binance: '#FFCC33',
+  binance: '#FF8844',
   coinbase: '#33CCFF',
   kraken: '#FF3366',
   bitstamp: '#66FF99',
@@ -55,9 +55,6 @@ function startFeeds(coin: Coin) {
     const key = `${market.exchange}:${market.symbol}`.toLowerCase()
     orderbooks.set(key, new OrderBook(market.exchange, market.symbol))
   }
-
-  // Update status
-  updateStatus('Connecting...')
 
   for (const [exchange, symbols] of exchangeSymbols) {
     const feed = createFeed(exchange)
@@ -181,11 +178,6 @@ function renderAskRow(level: AggregatedLevel, maxAmount: number): string {
   </div>`
 }
 
-function updateStatus(text: string) {
-  const el = document.getElementById('status')
-  if (el) el.textContent = text
-}
-
 function updateLegend(allBooks: OrderBook[]) {
   const legend = document.getElementById('legend')!
   const items = legend.querySelectorAll('.legend-item')
@@ -202,8 +194,6 @@ function updateLegend(allBooks: OrderBook[]) {
     }
   }
 
-  const readyCount = allBooks.filter((ob) => ob.ready).length
-  updateStatus(`${readyCount}/${allBooks.length}`)
 }
 
 function getGroupingOptions(baseGrouping: number): number[] {
