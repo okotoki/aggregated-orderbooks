@@ -32,7 +32,7 @@ function rebuildLegend(coin: Coin) {
   legend.innerHTML = ''
   for (const market of markets) {
     const color = EXCHANGE_COLORS[market.exchange]
-    legend.innerHTML += `<span class="legend-item" data-exchange="${market.exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[market.exchange]} <span class="legend-market">${market.symbol}</span> <span class="exchange-status"></span></span>`
+    legend.innerHTML += `<span class="legend-item" data-exchange="${market.exchange}"><span class="exchange-dot" style="background:${color}"></span> ${EXCHANGE_NAMES[market.exchange]} <span class="legend-market">${market.symbol}</span></span>`
   }
 }
 
@@ -195,18 +195,9 @@ function updateLegend(allBooks: OrderBook[]) {
     if (!exchange) continue
 
     const books = allBooks.filter((ob) => ob.exchange === exchange)
-    const statusEl = item.querySelector('.exchange-status') as HTMLElement
-    if (!statusEl) continue
-
-    if (books.length === 0) {
-      statusEl.textContent = ''
-      item.classList.remove('active')
-    } else if (books.some((ob) => ob.ready)) {
-      const totalLevels = books.reduce((sum, ob) => sum + ob.levelCount, 0)
-      statusEl.textContent = `${totalLevels}`
+    if (books.some((ob) => ob.ready)) {
       item.classList.add('active')
     } else {
-      statusEl.textContent = '...'
       item.classList.remove('active')
     }
   }
