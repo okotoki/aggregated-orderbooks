@@ -1,12 +1,13 @@
 import { createFeed } from './exchanges'
 import { getMarketsForCoin, COINS } from './markets'
 import { OrderBook } from './orderbook'
-import { aggregate, type AggregatedBook, type AggregatedLevel } from './aggregator'
+import { aggregate, autoGrouping, type AggregatedBook, type AggregatedLevel } from './aggregator'
 import type { Coin, Exchange } from './types'
 import type { ExchangeFeed } from './exchanges/base'
 
 let currentCoin: Coin = 'BTC'
 let currentDepth = 25
+let currentGrouping: number | undefined = undefined // undefined = auto
 let orderbooks = new Map<string, OrderBook>()
 let feeds: ExchangeFeed[] = []
 let lastRender = 0
@@ -70,7 +71,7 @@ function scheduleRender() {
 
 function render() {
   const allBooks = Array.from(orderbooks.values())
-  const book = aggregate(allBooks, currentDepth)
+  const book = aggregate(allBooks, currentDepth, currentGrouping)
 
   const readyCount = allBooks.filter((ob) => ob.ready).length
   updateStatus(`${readyCount}/${orderbooks.size} exchanges connected`)
@@ -82,19 +83,25 @@ function renderBook(book: AggregatedBook) {
   const bidsEl = document.getElementById('bids')!
   const asksEl = document.getElementById('asks')!
 
-  const maxBidAmount = Math.max(...book.bids.map((l) => l.amount), 0.001)
-  const maxAskAmount = Math.max(...book.asks.map((l) => l.amount), 0.001)
+  const maxAmount = Math.max(
+    ...book.bids.map((l) => l.amount),
+    ...book.asks.map((l) => l.amount),
+    0.001
+  )
 
-  bidsEl.innerHTML = book.bids.map((l) => renderBidRow(l, maxBidAmount)).join('')
-  asksEl.innerHTML = book.asks.map((l) => renderAskRow(l, maxAskAmount)).join('')
+  bidsEl.innerHTML = book.bids.map((l) => renderBidRow(l, maxAmount)).join('')
+  asksEl.innerHTML = book.asks.map((l) => renderAskRow(l, maxAmount)).join('')
 
-  // Spread + grouping info
+  // Spread
   if (book.bids.length > 0 && book.asks.length > 0) {
     const spread = book.asks[0].price - book.bids[0].price
     const spreadPct = ((spread / book.asks[0].price) * 100).toFixed(3)
     document.getElementById('spread')!.textContent =
-      `Spread: $${spread.toFixed(2)} (${spreadPct}%)  ·  Grouping: $${book.grouping}`
+      `Spread: $${spread.toFixed(2)} (${spreadPct}%)`
   }
+
+  // Update grouping selector to reflect current auto value
+  updateGroupingOptions(book.grouping)
 }
 
 function renderBidRow(level: AggregatedLevel, maxAmount: number): string {
@@ -136,6 +143,47 @@ function updateStatus(text: string) {
   if (el) el.textContent = text
 }
 
+function getGroupingOptions(baseGrouping: number): number[] {
+  // Offer auto value, plus some multiples and fractions
+  const options = new Set<number>()
+  options.add(baseGrouping / 10)
+  options.add(baseGrouping / 5)
+  options.add(baseGrouping / 2)
+  options.add(baseGrouping)
+  options.add(baseGrouping * 2)
+  options.add(baseGrouping * 5)
+  options.add(baseGrouping * 10)
+  return Array.from(options).filter((v) => v >= 0.001).sort((a, b) => a - b)
+}
+
+let lastGroupingBase = 0
+
+function updateGroupingOptions(currentAutoGrouping: number) {
+  if (currentAutoGrouping === lastGroupingBase) return
+  lastGroupingBase = currentAutoGrouping
+
+  const selector = document.getElementById('grouping-select') as HTMLSelectElement
+  const options = getGroupingOptions(currentAutoGrouping)
+
+  selector.innerHTML = ''
+  const autoOpt = document.createElement('option')
+  autoOpt.value = 'auto'
+  autoOpt.textContent = `Group: Auto ($${currentAutoGrouping})`
+  selector.appendChild(autoOpt)
+
+  for (const val of options) {
+    const opt = document.createElement('option')
+    opt.value = String(val)
+    opt.textContent = `Group: $${val}`
+    if (currentGrouping === val) opt.selected = true
+    selector.appendChild(opt)
+  }
+
+  if (currentGrouping === undefined) {
+    selector.value = 'auto'
+  }
+}
+
 // Initialize
 function init() {
   // Coin selector
@@ -151,7 +199,23 @@ function init() {
   selector.addEventListener('change', () => {
     currentCoin = selector.value as Coin
     document.getElementById('coin-label')!.textContent = currentCoin
+    lastGroupingBase = 0 // reset so grouping options refresh for new coin
+    currentGrouping = undefined
     startFeeds(currentCoin)
+  })
+
+  // Grouping selector
+  const groupingSelector = document.getElementById('grouping-select') as HTMLSelectElement
+  groupingSelector.addEventListener('change', () => {
+    if (groupingSelector.value === 'auto') {
+      currentGrouping = undefined
+    } else {
+      currentGrouping = parseFloat(groupingSelector.value)
+    }
+    scheduleRender()
+    // Force immediate render
+    lastRender = 0
+    render()
   })
 
   // Legend

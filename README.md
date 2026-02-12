@@ -61,4 +61,4 @@ Exchanges that send snapshots via REST (Binance, Bitstamp) buffer WebSocket delt
 
 ---
 
-Built with [okotoki](https://okotoki.com)
+Vibed by [TapeSurf](https://tapesurf.com)
