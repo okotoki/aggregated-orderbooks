@@ -23,6 +23,14 @@ export class BinanceFeed extends ExchangeFeed {
   private depthStates = new Map<string, DepthState>()
   private symbols: string[] = []
 
+  protected get restBaseUrl(): string {
+    return 'https://api.binance.com/api/v3/depth'
+  }
+
+  protected get snapshotLimit(): number {
+    return 5000
+  }
+
   protected mapToSubscribeMessages(symbols: string[]) {
     return [
       {
@@ -62,7 +70,7 @@ export class BinanceFeed extends ExchangeFeed {
   private async fetchRestSnapshot(symbol: string) {
     try {
       const upperSymbol = symbol.toUpperCase()
-      const url = `https://api.binance.com/api/v3/depth?symbol=${upperSymbol}&limit=5000`
+      const url = `${this.restBaseUrl}?symbol=${upperSymbol}&limit=${this.snapshotLimit}`
       const response = await fetch(url)
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const data = await response.json()
@@ -89,7 +97,7 @@ export class BinanceFeed extends ExchangeFeed {
         if (!foundFirstValid) {
           if (update.U > data.lastUpdateId + 1) {
             // Gap — snapshot too old, re-fetch
-            console.warn(`[binance] gap detected for ${symbol}, re-fetching snapshot`)
+            console.warn(`[${this.exchange}] gap detected for ${symbol}, re-fetching snapshot`)
             state.snapshotProcessed = false
             state.bufferedUpdates = []
             this.fetchRestSnapshot(symbol)
@@ -117,7 +125,7 @@ export class BinanceFeed extends ExchangeFeed {
       }
 
       this.emit({
-        exchange: 'binance',
+        exchange: this.exchange,
         symbol: upperSymbol,
         isSnapshot: true,
         bids,
@@ -125,9 +133,9 @@ export class BinanceFeed extends ExchangeFeed {
         timestamp: new Date(),
       })
 
-      console.log(`[binance] snapshot for ${symbol}: ${bids.length} bids, ${asks.length} asks`)
+      console.log(`[${this.exchange}] snapshot for ${symbol}: ${bids.length} bids, ${asks.length} asks`)
     } catch (e) {
-      console.error(`[binance] failed to fetch snapshot for ${symbol}:`, e)
+      console.error(`[${this.exchange}] failed to fetch snapshot for ${symbol}:`, e)
       // Retry after delay
       setTimeout(() => this.fetchRestSnapshot(symbol), 3000)
     }
@@ -152,7 +160,7 @@ export class BinanceFeed extends ExchangeFeed {
     state.lastUpdateId = data.u
 
     return {
-      exchange: 'binance',
+      exchange: this.exchange,
       symbol: data.s,
       isSnapshot: false,
       bids: mapLevels(data.b),

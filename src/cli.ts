@@ -2,24 +2,26 @@ import { createFeed } from './exchanges'
 import { getMarketsForCoin, COINS } from './markets'
 import { OrderBook } from './orderbook'
 import { aggregate, type AggregatedBook } from './aggregator'
-import type { Coin, Exchange } from './types'
+import type { Coin, Exchange, MarketType } from './types'
 
 // Parse args
 const args = process.argv.slice(2)
 const coinArg = (args[0] || 'BTC').toUpperCase() as Coin
 const depthArg = parseInt(args.find((a) => a.startsWith('--depth='))?.split('=')[1] || '20')
 const exchangeFilter = args.find((a) => a.startsWith('--exchange='))?.split('=')[1] as Exchange | undefined
+const marketType: MarketType = args.includes('--perps') ? 'perp' : 'spot'
 
 if (!COINS.includes(coinArg)) {
   console.error(`Unknown coin: ${coinArg}. Supported: ${COINS.join(', ')}`)
   process.exit(1)
 }
 
-console.log(`Aggregated Orderbook — ${coinArg}`)
+const modeLabel = marketType === 'perp' ? 'Perps' : 'Spot'
+console.log(`Aggregated Orderbook — ${coinArg} (${modeLabel})`)
 console.log(`Depth: ${depthArg}, Exchanges: ${exchangeFilter || 'all'}`)
 console.log('Connecting...\n')
 
-let markets = getMarketsForCoin(coinArg)
+let markets = getMarketsForCoin(coinArg, marketType)
 if (exchangeFilter) {
   markets = markets.filter((m) => m.exchange === exchangeFilter)
 }
@@ -75,17 +77,20 @@ function printBook(book: AggregatedBook, coin: string) {
 
   const PAD = 14
   const EXCHANGE_COLORS: Record<Exchange, string> = {
-    binance: '\x1b[33m',   // yellow
-    coinbase: '\x1b[34m',  // blue
-    kraken: '\x1b[35m',    // magenta
-    bitstamp: '\x1b[36m',  // cyan
+    binance: '\x1b[33m',          // yellow
+    coinbase: '\x1b[34m',         // blue
+    kraken: '\x1b[35m',           // magenta
+    bitstamp: '\x1b[36m',         // cyan
+    'binance-futures': '\x1b[93m', // bright yellow
+    bybit: '\x1b[91m',            // bright red
+    bitmex: '\x1b[31m',           // red
   }
   const RESET = '\x1b[0m'
   const GREEN = '\x1b[32m'
   const RED = '\x1b[31m'
   const DIM = '\x1b[2m'
 
-  console.log(`${DIM}Aggregated Orderbook — ${coin}  (grouping: ${book.grouping})${RESET}\n`)
+  console.log(`${DIM}Aggregated Orderbook — ${coin} (${modeLabel})  (grouping: ${book.grouping})${RESET}\n`)
 
   // Header
   console.log(

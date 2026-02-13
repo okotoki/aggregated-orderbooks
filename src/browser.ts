@@ -2,10 +2,11 @@ import { createFeed } from './exchanges'
 import { getMarketsForCoin, COINS } from './markets'
 import { OrderBook } from './orderbook'
 import { aggregate, autoGrouping, type AggregatedBook, type AggregatedLevel } from './aggregator'
-import type { Coin, Exchange } from './types'
+import type { Coin, Exchange, MarketType } from './types'
 import type { ExchangeFeed } from './exchanges/base'
 
 let currentCoin: Coin = 'BTC'
+let currentMarketType: MarketType = 'spot'
 let currentDepth = 20
 let currentGrouping: number | undefined = undefined // undefined = auto
 let orderbooks = new Map<string, OrderBook>()
@@ -17,6 +18,9 @@ const EXCHANGE_COLORS: Record<Exchange, string> = {
   coinbase: '#33CCFF',
   kraken: '#FF3366',
   bitstamp: '#66FF99',
+  'binance-futures': '#FFD700',
+  bybit: '#FF9933',
+  bitmex: '#FF5555',
 }
 
 const EXCHANGE_NAMES: Record<Exchange, string> = {
@@ -24,11 +28,14 @@ const EXCHANGE_NAMES: Record<Exchange, string> = {
   coinbase: 'Coinbase',
   kraken: 'Kraken',
   bitstamp: 'Bitstamp',
+  'binance-futures': 'Binance Futures',
+  bybit: 'Bybit',
+  bitmex: 'BitMEX',
 }
 
 function rebuildLegend(coin: Coin) {
   const legend = document.getElementById('legend')!
-  const markets = getMarketsForCoin(coin)
+  const markets = getMarketsForCoin(coin, currentMarketType)
   legend.innerHTML = ''
   for (const market of markets) {
     const color = EXCHANGE_COLORS[market.exchange]
@@ -44,7 +51,7 @@ function startFeeds(coin: Coin) {
 
   rebuildLegend(coin)
 
-  const markets = getMarketsForCoin(coin)
+  const markets = getMarketsForCoin(coin, currentMarketType)
   const exchangeSymbols = new Map<Exchange, string[]>()
 
   for (const market of markets) {
@@ -229,6 +236,13 @@ function updateGroupingOptions(currentAutoGrouping: number) {
   }
 }
 
+function updateMarketTypeButtons() {
+  const spotBtn = document.getElementById('btn-spot')!
+  const perpBtn = document.getElementById('btn-perp')!
+  spotBtn.classList.toggle('active', currentMarketType === 'spot')
+  perpBtn.classList.toggle('active', currentMarketType === 'perp')
+}
+
 // Initialize
 function init() {
   // Coin selector
@@ -262,6 +276,29 @@ function init() {
     render()
   })
 
+  // Spot/Perps toggle
+  const spotBtn = document.getElementById('btn-spot')!
+  const perpBtn = document.getElementById('btn-perp')!
+
+  spotBtn.addEventListener('click', () => {
+    if (currentMarketType === 'spot') return
+    currentMarketType = 'spot'
+    updateMarketTypeButtons()
+    lastGroupingBase = 0
+    currentGrouping = undefined
+    startFeeds(currentCoin)
+  })
+
+  perpBtn.addEventListener('click', () => {
+    if (currentMarketType === 'perp') return
+    currentMarketType = 'perp'
+    updateMarketTypeButtons()
+    lastGroupingBase = 0
+    currentGrouping = undefined
+    startFeeds(currentCoin)
+  })
+
+  updateMarketTypeButtons()
   startFeeds(currentCoin)
 }
 
