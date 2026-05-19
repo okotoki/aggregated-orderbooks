@@ -58,28 +58,32 @@ export function aggregate(
     grouping = autoGrouping(midPrice)
   }
 
-  // Use all available levels — OrderBook already trims to a meaningful range.
-  // With fine-grained books (Binance has $0.01 levels), a small slice would
-  // only cover a few dollars, producing barely any bins at wider groupings.
-  return {
-    bids: mergeSide(
-      readyBooks.map((ob) => ({
-        exchange: ob.exchange,
-        levels: ob.bids,
-      })),
-      depth,
-      'desc',
-      grouping
-    ),
-    asks: mergeSide(
+  const bids = mergeSide(
+    readyBooks.map((ob) => ({
+      exchange: ob.exchange,
+      levels: ob.bids,
+    })),
+    'desc',
+    grouping
+  )
+  const asks = removeCrossedAsks(
+    mergeSide(
       readyBooks.map((ob) => ({
         exchange: ob.exchange,
         levels: ob.asks,
       })),
-      depth,
       'asc',
       grouping
     ),
+    bids
+  )
+
+  // Use all available levels — OrderBook already trims to a meaningful range.
+  // With fine-grained books (Binance has $0.01 levels), slicing before grouping
+  // would only cover a few dollars, producing barely any bins at wider groupings.
+  return {
+    bids: bids.slice(0, depth),
+    asks: asks.slice(0, depth),
     grouping,
   }
 }
@@ -96,18 +100,18 @@ type ExchangeLevels = {
  */
 function binPrice(price: number, grouping: number, direction: 'asc' | 'desc'): number {
   if (grouping <= 0) return price
+  const ratio = price / grouping
   if (direction === 'desc') {
     // bids: floor
-    return Math.floor(price / grouping) * grouping
+    return roundPrice(Math.floor(ratio + 1e-10) * grouping)
   } else {
     // asks: ceil
-    return Math.ceil(price / grouping) * grouping
+    return roundPrice(Math.ceil(ratio - 1e-10) * grouping)
   }
 }
 
 function mergeSide(
   sources: ExchangeLevels[],
-  depth: number,
   direction: 'asc' | 'desc',
   grouping: number
 ): AggregatedLevel[] {
@@ -147,5 +151,18 @@ function mergeSide(
       direction === 'desc' ? b.price - a.price : a.price - b.price
     )
 
-  return sorted.slice(0, depth)
+  return sorted
+}
+
+function removeCrossedAsks(asks: AggregatedLevel[], bids: AggregatedLevel[]): AggregatedLevel[] {
+  const bestBid = bids[0]?.price
+  if (bestBid === undefined) return asks
+
+  // Independent exchange feeds can briefly cross after grouping. For display,
+  // keep one clean price axis by hiding ask bins at or below the best bid bin.
+  return asks.filter((ask) => ask.price > bestBid)
+}
+
+function roundPrice(price: number): number {
+  return Math.round(price * 1e8) / 1e8
 }
